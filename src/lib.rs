@@ -7,8 +7,8 @@ macro_rules! impl_marker_trait {
 //#region Numeric Helper Traits
 
 macro_rules! impl_max_trait {
-    ($TRAIT:tt, $($TYPE:ty),+) => {
-        $(impl $TRAIT for $TYPE {
+    ($($TYPE:ty),+) => {
+        $(impl HasMaxValue for $TYPE {
             #[inline(always)]
             fn MAX() -> Self {
                 Self::MAX
@@ -18,13 +18,40 @@ macro_rules! impl_max_trait {
 }
 
 macro_rules! impl_min_trait {
-    ($TRAIT:tt, $($TYPE:ty),+) => {
-        $(impl $TRAIT for $TYPE {
+    ($($TYPE:ty),+) => {
+        $(impl HasMinValue for $TYPE {
             #[inline(always)]
             fn MIN() -> Self {
                 Self::MIN
             }
         })+
+    };
+}
+
+macro_rules! impl_add_sub_zero_traits {
+    ($ONE:expr, $ZERO:expr, $($TYPE:ty),+) => {
+        $(
+            impl CanAddOne for $TYPE {
+                #[inline(always)]
+                fn add_one(self) -> Self {
+                    self + $ONE
+                }
+            }
+
+            impl CanSubOne for $TYPE {
+                #[inline(always)]
+                fn sub_one(self) -> Self {
+                    self - $ONE
+                }
+            }
+
+            impl CanBeZero for $TYPE {
+                #[inline(always)]
+                fn zero() -> Self {
+                    $ZERO
+                }
+            }
+        )+
     };
 }
 
@@ -48,8 +75,25 @@ pub trait HasMinValue {
     fn MIN() -> Self;
 }
 
-impl_max_trait!(HasMaxValue, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize, f32, f64);
-impl_min_trait!(HasMinValue, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize, f32, f64);
+pub trait CanAddOne {
+    #[allow(non_snake_case)]
+    fn add_one(self) -> Self;
+}
+
+pub trait CanSubOne {
+    #[allow(non_snake_case)]
+    fn sub_one(self) -> Self;
+}
+
+pub trait CanBeZero {
+    #[allow(non_snake_case)]
+    fn zero() -> Self;
+}
+
+impl_max_trait!(u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize, f32, f64);
+impl_min_trait!(u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize, f32, f64);
+impl_add_sub_zero_traits!(1, 0, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize);
+impl_add_sub_zero_traits!(1.0, 0.0, f32, f64);
 
 const _: () = {
     fn assert_int<T: IsInteger>() {}
